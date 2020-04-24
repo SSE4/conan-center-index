@@ -21,6 +21,11 @@ class GlfwConan(ConanFile):
     _build_subfolder = "build_subfolder"
     _cmake = None
 
+    def requirements(self):
+        self.requires("opengl/0.0.1")
+        if self.settings.os == "Linux":
+            self.requires("x11/0.0.1")
+
     def _configure_cmake(self):
         if not self._cmake:
             self._cmake = CMake(self)
@@ -31,25 +36,6 @@ class GlfwConan(ConanFile):
                 self._cmake.definitions["USE_MSVC_RUNTIME_LIBRARY_DLL"] = "MD" in self.settings.compiler.runtime
             self._cmake.configure(source_folder=self._source_subfolder)
         return self._cmake
-
-    def system_requirements(self):
-        if tools.os_info.is_linux:
-            package_tool = tools.SystemPackageTool(conanfile=self, default_mode="verify")
-            libs_name = ""
-            os_info = tools.OSInfo()
-            if os_info.with_apt:
-                libs_name = "libx11-dev libxrandr-dev libxinerama-dev libxkbcommon-dev libxcursor-dev " \
-                            "libxi-dev libglu1-mesa-dev"
-            elif os_info.with_yum:
-                libs_name = "libX11-devel libXrandr-devel libXinerama-devel libxkbcommon-devel " \
-                            "libXcursor-devel libXi-devel mesa-libGL-devel"
-            elif os_info.with_pacman:
-                libs_name = "libx11 libxrandr libxinerama libxkbcommon-x11 libxcursor libxi libglvnd "
-            else:
-                self.output.warn("Could not find any package manager, please install x11, xrandr, xinerama," \
-                                 "xkb, xcursor, xi and mesa libraries if not already installed.")
-                return
-            package_tool.install(update=True, packages=libs_name)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -82,6 +68,6 @@ class GlfwConan(ConanFile):
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == "Linux":
-            self.cpp_info.system_libs.extend(["X11", "GL", "m", "pthread", "dl", "rt"])
+            self.cpp_info.system_libs.extend(["m", "pthread", "dl", "rt"])
         elif self.settings.os == "Macos":
-            self.cpp_info.frameworks.extend(["OpenGL", "Cocoa", "IOKit", "CoreVideo"])
+            self.cpp_info.frameworks.extend(["Cocoa", "IOKit", "CoreVideo"])
